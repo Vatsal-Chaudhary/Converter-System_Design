@@ -48,4 +48,4 @@ logging:
     org.springframework.cloud.gateway: DEBUG
     org.springframework.beans.factory: DEBUG
 jwt:
-  secret: Jj1kiNNGkEPQJOmdUon0CetellzrugvtA04hqk7oBKc=
+  secret: ${JWT_SECRET}
