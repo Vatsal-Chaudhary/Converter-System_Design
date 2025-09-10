@@ -1,6 +1,7 @@
 package com.vat.authservice.service;
 
 import com.vat.authservice.dto.RequestDTO;
+import com.vat.authservice.dto.ResponseDTO;
 import com.vat.authservice.util.JwtUtils;
 import io.jsonwebtoken.JwtException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -23,19 +24,29 @@ public class AuthService {
 
 
     public void register(RequestDTO request) {
-        userService.registerUser(new RequestDTO(request.getUsername(), passwordEncoder.encode(request.getPassword())));
+        userService.registerUser(new RequestDTO(request.getUsername(), passwordEncoder.encode(request.getPassword()), request.getRole()));
     }
 
-    public Optional<String> authenticate(RequestDTO request) {
+    public Optional<ResponseDTO> authenticate(RequestDTO request) {
         return userService.findByUsername(request.getUsername())
                 .filter(u -> passwordEncoder.matches(request.getPassword(), u.getPassword()))
-                .map(u -> jwtUtils.generateToken(u.getUsername(), u.getRole()));
+                .map(u -> new ResponseDTO(jwtUtils.generateToken(u.getUsername(), u.getRole()), u.getId()));
     }
 
     public boolean validate(String token) {
         try {
             jwtUtils.validateToken(token);
             return true;
+        } catch (JwtException e) {
+            return false;
+        }
+    }
+
+    public boolean validateAdmin(String token) {
+        try {
+            jwtUtils.validateToken(token);
+            String role = jwtUtils.getRoleFromToken(token);
+            return "ADMIN".equals(role);
         } catch (JwtException e) {
             return false;
         }

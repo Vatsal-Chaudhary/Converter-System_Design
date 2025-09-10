@@ -21,6 +21,10 @@ public class User {
     @Column(nullable = false)
     private String role = "USER";
 
+    public void setRole(String role) {
+        this.role = role;
+    }
+
     public User() {
     }
 

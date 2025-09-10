@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: upload-service
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/videodb
+      data: videodb
+  servlet:
+    multipart:
+      max-file-size: 150MB
+      max-request-size: 100MB
+rabbitmq:
+  exchange:
+    name: ${RABBITMQ_EXCHANGE_NAME}
+  queue:
+    name: ${RABBITMQ_QUEUE_NAME}
+  routing:
+    key: ${RABBITMQ_ROUTING_KEY}
+server:
+  port: 8083

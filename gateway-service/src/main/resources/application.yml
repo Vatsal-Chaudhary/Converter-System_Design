@@ -1,0 +1,51 @@
+spring:
+  application:
+    name: gateway-service
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            - id: auth-service-route
+              uri: http://localhost:8081
+              predicates:
+                - Path=/auth/**
+              filters:
+                - StripPrefix=1
+
+#            - id: upload-service-route
+#              uri: http://localhost:8083
+#              predicates:
+#                - Path=/upload/**
+#              filters:
+#                - StripPrefix=1
+#                - JwtValidation
+
+            - id: upload-service
+              uri: http://localhost:8083
+              predicates:
+                - Path=/upload/video/**
+                - Method=GET,POST
+              filters:
+                - StripPrefix=1
+                - name: JwtValidation
+                  args:
+                    requireAdmin: false
+
+            - id: upload-admin-service
+              uri: http://localhost:8083
+              predicates:
+                - Path=/upload/admin/**
+              filters:
+                - StripPrefix=1
+                - name: JwtValidation
+                  args:
+                    requireAdmin: true
+server:
+  port: 8080
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.beans.factory: DEBUG
+jwt:
+  secret: Jj1kiNNGkEPQJOmdUon0CetellzrugvtA04hqk7oBKc=

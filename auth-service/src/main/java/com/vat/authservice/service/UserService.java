@@ -6,7 +6,9 @@ import com.vat.authservice.model.User;
 import com.vat.authservice.repo.UserRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class UserService {
@@ -22,10 +24,39 @@ public class UserService {
             throw new AlreadyExists("User with this email already exists");
         }
         User user = new User(request.getUsername(), request.getPassword());
+        if (request.getRole() != null && !request.getRole().trim().isEmpty()) {
+            user.setRole(request.getRole());
+        }
         userRepo.save(user);
     }
 
     public Optional<User> findByUsername(String username) {
         return userRepo.findByUsername(username);
+    }
+
+    public List<User> getAllUsers() {
+        return userRepo.findAll();
+    }
+
+    public String deleteUser(String userId) {
+        try {
+            UUID uuid = UUID.fromString(userId);
+            Optional<User> userOpt = userRepo.findById(uuid);
+
+            if (userOpt.isEmpty()) {
+                return "NOT_FOUND";
+            }
+
+            User user = userOpt.get();
+            if ("ADMIN".equals(user.getRole())) {
+                return "ADMIN_DELETE_FORBIDDEN";
+            }
+
+            userRepo.deleteById(uuid);
+            return "DELETED";
+
+        } catch (IllegalArgumentException e) {
+            return "INVALID_UUID";
+        }
     }
 }
