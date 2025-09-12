@@ -36,4 +36,12 @@ public class GlobalExceptionHandler {
         error.put("message", "can't upload this large file");
         return ResponseEntity.badRequest().body(error);
     }
+
+    @ExceptionHandler(MessageQueueException.class)
+    public ResponseEntity<Map<String, String>> messageQueue(MessageQueueException ex) {
+        logger.warn("Error while putting file on message queue: {}", ex.getMessage());
+        Map<String, String> error = new HashMap<>();
+        error.put("message", ex.getMessage());
+        return ResponseEntity.badRequest().body(error);
+    }
 }

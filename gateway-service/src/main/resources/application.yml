@@ -7,7 +7,7 @@ spring:
         webflux:
           routes:
             - id: auth-service-route
-              uri: http://localhost:8081
+              uri: ${AUTH_SERVICE_ROUTE}
               predicates:
                 - Path=/auth/**
               filters:
@@ -21,8 +21,8 @@ spring:
 #                - StripPrefix=1
 #                - JwtValidation
 
-            - id: upload-service
-              uri: http://localhost:8083
+            - id: upload-video-service
+              uri: ${UPLOAD_SERVICE_ROUTE}
               predicates:
                 - Path=/upload/video/**
                 - Method=GET,POST
@@ -33,7 +33,7 @@ spring:
                     requireAdmin: false
 
             - id: upload-admin-service
-              uri: http://localhost:8083
+              uri: ${UPLOAD_SERVICE_ROUTE}
               predicates:
                 - Path=/upload/admin/**
               filters:

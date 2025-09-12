@@ -4,6 +4,7 @@ import com.vat.uploadservice.dto.UploadResponseDto;
 import com.vat.uploadservice.dto.VideoMessage;
 import com.vat.uploadservice.exceptions.EmptyFileException;
 import com.vat.uploadservice.exceptions.InvalidFileException;
+import com.vat.uploadservice.exceptions.MessageQueueException;
 import com.vat.uploadservice.exceptions.SizeExceedingException;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,14 +30,24 @@ public class UploadService {
     }
 
     public UploadResponseDto uploadFile(MultipartFile file, String userid) {
+        String fileId = null;
         try {
             validateVideoFile(file);
-            String fileId = gridFsService.storeVideo(file, userid);
+            fileId = gridFsService.storeVideo(file, userid);
 
             sendVideoProcessingMessage(fileId, userid);
 
             return new UploadResponseDto(fileId, "file uploaded successfully");
         } catch (Exception ex) {
+            if (fileId != null) {
+                try {
+                    gridFsService.deleteVideo(fileId);
+                    System.out.println("Rolled back file storage due to messaging failure");
+                } catch (Exception rollbackEx) {
+                    System.err.println("Failed to rollback file storage: " + rollbackEx.getMessage());
+                }
+            }
+
             ex.printStackTrace();
             throw new InvalidFileException("Upload file could not be uploaded");
         }
@@ -53,7 +64,8 @@ public class UploadService {
         } catch (Exception ex) {
             System.err.println("Failed to send processing message: " + ex.getMessage());
             System.err.println("Exchange: " + exchange + ", Routing Key: " + routingKey);
-            ex.printStackTrace(); // This will show the full stack trace
+            ex.printStackTrace();
+            throw new MessageQueueException("Error while sending file to queue");
         }
     }
 
