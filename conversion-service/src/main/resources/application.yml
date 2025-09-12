@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: conversion-service
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: guest
+    password: guest
+mongodb:
+  video:
+    uri: ${VIDEO_MONGODB_URI:mongodb://localhost:27017/videodb}
+  audio:
+    uri: ${AUDIO_MONGODB_URI:mongodb://localhost:27017/audiodb}
+rabbitmq:
+  exchange:
+    name: ${RABBITMQ_EXCHANGE_NAME}
+  queue:
+    video:
+      name: ${RABBITMQ_VIDEO_QUEUE_NAME}
+    audio:
+      name: ${RABBITMQ_AUDIO_QUEUE_NAME}
+  routing:
+    video:
+      key: ${RABBITMQ_VIDEO_ROUTING_KEY}
+    audio:
+      key: ${RABBITMQ_AUDIO_ROUTING_KEY}
+server:
+  port: 8084
