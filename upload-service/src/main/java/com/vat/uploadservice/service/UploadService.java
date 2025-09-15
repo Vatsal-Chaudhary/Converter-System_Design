@@ -38,7 +38,7 @@ public class UploadService {
             sendVideoProcessingMessage(fileId, userid);
 
             return new UploadResponseDto(fileId, "file uploaded successfully");
-        } catch (Exception ex) {
+        } catch (MessageQueueException ex) {
             if (fileId != null) {
                 try {
                     gridFsService.deleteVideo(fileId);
@@ -47,7 +47,17 @@ public class UploadService {
                     System.err.println("Failed to rollback file storage: " + rollbackEx.getMessage());
                 }
             }
+            throw new MessageQueueException("There is problem sending video to conversion service");
 
+        } catch (Exception ex) {
+            if (fileId != null) {
+                try {
+                    gridFsService.deleteVideo(fileId);
+                    System.out.println("Rolled back file storage due to other failure");
+                } catch (Exception rollbackEx) {
+                    System.err.println("Failed to rollback file storage: " + rollbackEx.getMessage());
+                }
+            }
             ex.printStackTrace();
             throw new InvalidFileException("Upload file could not be uploaded");
         }

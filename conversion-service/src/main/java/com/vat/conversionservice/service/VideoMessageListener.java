@@ -42,7 +42,6 @@ public class VideoMessageListener {
 
     @RabbitListener(queues = "${rabbitmq.queue.video.name}")
     public void processingVideo(VideoMessage message) {
-        File mp3File = null;
         try {
             System.out.println("Processing Video Message: " + message.getFileId());
 
@@ -57,15 +56,12 @@ public class VideoMessageListener {
 
             Resource resource = videoGridFsTemplate.getResource(gridFSFile);
 
-            mp3File = conversionService.convertToMp3(resource.getInputStream());
-
-            ObjectId mp3FileId = audioGridFsTemplate.store(
-                    new FileInputStream(mp3File),
-                    gridFSFile.getFilename().replace(".mp4", ".mp3"),
-                    "audio/mpeg"
+            ObjectId mp3FileId = conversionService.convertToMp3AndStore(
+                    resource.getInputStream(),
+                    gridFSFile.getFilename(),
+                    audioGridFsTemplate,
+                    message.getUserId()
             );
-
-            System.out.println("Audio file stored with ID: " + mp3FileId);
 
             AudioMessage audioMessage = new AudioMessage(
                     mp3FileId.toString(),
@@ -74,18 +70,13 @@ public class VideoMessageListener {
                     gridFSFile.getFilename().replace(".mp4", ".mp3")
             );
 
-            System.out.println("Audio file stored with ID: " + mp3FileId);
-
             rabbitTemplate.convertAndSend(exchange, audioRoutingKey, audioMessage);
 
         } catch (Exception e) {
             System.err.println("Error processing video: " + e.getMessage());
             e.printStackTrace();
-        } finally {
-            if (mp3File != null && mp3File.exists()) {
-                mp3File.delete();
-            }
         }
     }
+
 }
 

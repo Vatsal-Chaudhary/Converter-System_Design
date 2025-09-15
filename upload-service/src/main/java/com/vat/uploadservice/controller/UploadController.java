@@ -29,8 +29,11 @@ public class UploadController {
 
     @PostMapping("/video")
     public ResponseEntity<UploadResponseDto> upload(@RequestParam("file")MultipartFile file
-                                                  , @RequestParam("User-Id") String userid) {
-        return new ResponseEntity<>(uploadService.uploadFile(file, userid), HttpStatus.OK);
+                                                  , @RequestHeader("User-Id") String userId) {
+        if (!userId.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
+            return ResponseEntity.badRequest().body(null);
+        }
+        return new ResponseEntity<>(uploadService.uploadFile(file, userId), HttpStatus.OK);
     }
 
     @GetMapping("/video/{fileId}")

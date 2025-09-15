@@ -20,18 +20,18 @@ public class UserService {
     }
 
     public void registerUser(RequestDTO request) {
-        if (userRepo.existsByUsername(request.getUsername())) {
+        if (userRepo.existsByEmail(request.getEmail())) {
             throw new AlreadyExists("User with this email already exists");
         }
-        User user = new User(request.getUsername(), request.getPassword());
+        User user = new User(request.getEmail(), request.getPassword());
         if (request.getRole() != null && !request.getRole().trim().isEmpty()) {
             user.setRole(request.getRole());
         }
         userRepo.save(user);
     }
 
-    public Optional<User> findByUsername(String username) {
-        return userRepo.findByUsername(username);
+    public Optional<User> findByEmail(String username) {
+        return userRepo.findByEmail(username);
     }
 
     public List<User> getAllUsers() {

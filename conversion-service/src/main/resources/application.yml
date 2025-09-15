@@ -24,5 +24,3 @@ rabbitmq:
       key: ${RABBITMQ_VIDEO_ROUTING_KEY}
     audio:
       key: ${RABBITMQ_AUDIO_ROUTING_KEY}
-server:
-  port: 8084

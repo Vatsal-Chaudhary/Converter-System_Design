@@ -1,69 +1,79 @@
 package com.vat.conversionservice.service;
 
-import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.bson.Document;
+import org.bson.types.ObjectId;
+import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class VideoConversionService {
 
-    public File convertToMp3(InputStream inputStream) throws IOException, InterruptedException {
-        File tempVideo = null;
-        File mp3File = null;
+    public ObjectId convertToMp3AndStore(InputStream videoInputStream, String filename, GridFsTemplate audioGridFsTemplate, String userId)
+            throws IOException, InterruptedException {
+
+        ProcessBuilder pb = new ProcessBuilder(
+                "ffmpeg",
+                "-i", "pipe:0",
+                "-vn",
+                "-ar", "44100",
+                "-ac", "2",
+                "-b:a", "192k",
+                "-f", "mp3",
+                "pipe:1"
+        );
+
+        pb.redirectErrorStream(true);
+        Process process = pb.start();
+
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        StringBuilder ffmpegLog = new StringBuilder();
 
         try {
-            tempVideo = File.createTempFile("video", ".mp4");
-            FileUtils.copyInputStreamToFile(inputStream, tempVideo);
-
-            mp3File = File.createTempFile("output", ".mp3");
-
-            ProcessBuilder pb = new ProcessBuilder(
-                    "ffmpeg",
-                    "-y",
-                    "-i", tempVideo.getAbsolutePath(),
-                    "-vn",
-                    "-ar", "44100",
-                    "-ac", "2",
-                    "-b:a", "192k",
-                    "-f", "mp3",
-                    mp3File.getAbsolutePath()
-            );
-
-            pb.redirectErrorStream(true);
-            Process process = pb.start();
-
-            StringBuilder output = new StringBuilder();
-            try (BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    output.append(line).append("\n");
+            executor.submit(() -> {
+                try (OutputStream ffmpegStdin = process.getOutputStream()) {
+                    IOUtils.copy(videoInputStream, ffmpegStdin);
+                    System.out.println("Video data fed to FFmpeg successfully");
+                } catch (IOException e) {
+                    System.err.println("Error feeding video to FFmpeg: " + e.getMessage());
                 }
+            });
+
+            ObjectId mp3FileId;
+            try (InputStream ffmpegStdout = process.getInputStream()) {
+                String mp3Filename = filename.replaceAll("\\.(mp4|avi|mov|mkv)$", ".mp3");
+                Document metadata = new  Document();
+                metadata.put("userId", userId);
+                mp3FileId = audioGridFsTemplate.store(ffmpegStdout, mp3Filename, "audio/mpeg", metadata);
+                System.out.println("MP3 stored directly to GridFS with ID: " + mp3FileId);
             }
 
             int exitCode = process.waitFor();
 
-            System.out.println("FFmpeg output:");
-            System.out.println(output);
-            System.out.println("FFmpeg exit code: " + exitCode);
-
             if (exitCode != 0) {
-                throw new RuntimeException("FFmpeg conversion failed with exit code " + exitCode +
-                                                   ". Output: " + output.toString());
+                throw new RuntimeException("FFmpeg conversion failed with exit code: " + exitCode);
             }
 
-            if (!mp3File.exists() || mp3File.length() == 0) {
-                throw new RuntimeException("MP3 file was not created or is empty");
-            }
-
-            System.out.println("Conversion successful. MP3 file size: " + mp3File.length() + " bytes");
-            return mp3File;
+            System.out.println("Conversion successful! Audio file ID: " + mp3FileId);
+            return mp3FileId;
 
         } finally {
-            if (tempVideo != null && tempVideo.exists()) {
-                tempVideo.delete();
+            executor.shutdown();
+            try {
+                if (!executor.awaitTermination(5, TimeUnit.SECONDS)) {
+                    executor.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                executor.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
+            if (process.isAlive()) {
+                process.destroyForcibly();
             }
         }
     }

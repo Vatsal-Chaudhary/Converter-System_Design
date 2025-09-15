@@ -4,7 +4,7 @@ metadata:
   name: upload-configmap
 data:
   MONGODB_URI: mongodb://host.minikube.internal:27017/videodb
-  RABBITMQ_HOST: host.minikube.internal
+  RABBITMQ_HOST: rabbitmq
   RABBITMQ_PORT: "5672"
   RABBITMQ_EXCHANGE_NAME: video-exchange
   RABBITMQ_QUEUE_NAME: video.queue

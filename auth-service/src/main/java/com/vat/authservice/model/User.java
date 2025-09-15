@@ -1,6 +1,7 @@
 package com.vat.authservice.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
 
 import java.util.UUID;
 
@@ -12,8 +13,9 @@ public class User {
     @Column(columnDefinition = "UUID DEFAULT gen_random_uuid()")
     private UUID id;
 
+    @Email
     @Column(unique = true, nullable = false)
-    private String username;
+    private String email;
 
     @Column(nullable = false)
     private String password;
@@ -37,12 +39,12 @@ public class User {
         this.id = id;
     }
 
-    public String getUsername() {
-        return username;
+    public String getEmail() {
+        return email;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public String getPassword() {
@@ -57,8 +59,8 @@ public class User {
         return role;
     }
 
-    public User(String username, String password) {
-        this.username = username;
+    public User(String email, String password) {
+        this.email = email;
         this.password = password;
     }
 }

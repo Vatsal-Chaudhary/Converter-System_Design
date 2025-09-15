@@ -24,13 +24,13 @@ public class AuthService {
 
 
     public void register(RequestDTO request) {
-        userService.registerUser(new RequestDTO(request.getUsername(), passwordEncoder.encode(request.getPassword()), request.getRole()));
+        userService.registerUser(new RequestDTO(request.getEmail(), passwordEncoder.encode(request.getPassword()), request.getRole()));
     }
 
     public Optional<ResponseDTO> authenticate(RequestDTO request) {
-        return userService.findByUsername(request.getUsername())
+        return userService.findByEmail(request.getEmail())
                 .filter(u -> passwordEncoder.matches(request.getPassword(), u.getPassword()))
-                .map(u -> new ResponseDTO(jwtUtils.generateToken(u.getUsername(), u.getRole()), u.getId()));
+                .map(u -> new ResponseDTO(jwtUtils.generateToken(u.getEmail(), u.getRole()), u.getId()));
     }
 
     public boolean validate(String token) {

@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: notification-service
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: guest
+    password: guest
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${GMAIL_EMAIL}
+    password: ${GMAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+rabbitmq:
+  exchange:
+    name: ${RABBITMQ_EXCHANGE_NAME}
+  queue:
+    name: ${RABBITMQ_AUDIO_QUEUE_NAME}
+  routing:
+    key: ${RABBITMQ_AUDIO_ROUTING_KEY}

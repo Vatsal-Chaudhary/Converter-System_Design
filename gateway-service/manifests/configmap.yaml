@@ -3,5 +3,5 @@ kind: ConfigMap
 metadata:
   name: gateway-configmap
 data:
-  AUTH_SERVICE_ROUTE: auth:8081 # http://localhost:8081
-  UPLOAD_SERVICE_ROUTE: upload:8083  # http://localhost:8083
+  AUTH_SERVICE_ROUTE: http://auth:8081 # http://localhost:8081
+  UPLOAD_SERVICE_ROUTE: http://upload:8083  # http://localhost:8083
